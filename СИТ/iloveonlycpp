@@ -1,0 +1,1 @@
+find . ! -name "*.cpp" ! -name "$(basename "$0")" ! -name "." –delete
