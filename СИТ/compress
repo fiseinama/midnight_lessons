@@ -1,0 +1,1 @@
+find "$1" -name "*.cpp" -exec zip cpp_files.zip {} +
