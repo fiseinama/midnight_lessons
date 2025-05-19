@@ -1,0 +1,19 @@
+//Дан набор целых чисел.Найти количество чисел, делящихся на три.
+
+#include<iostream>
+#include<vector>
+#include<algorithm>
+using namespace std;
+
+int main() {
+	int n;
+	cin >> n;
+	vector<int> a(n);
+	for (vector<int>::iterator it = a.begin(); it != a.end(); it++)
+		cin >> *it;
+
+	int k = count_if(a.begin(), a.end(), [](int x) {return x % 3 == 0; });
+
+	cout << k;
+
+}
