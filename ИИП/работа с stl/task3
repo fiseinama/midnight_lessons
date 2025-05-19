@@ -1,0 +1,44 @@
+//Используя библиотеки numeric и functional, найти первые n чисел Фибоначчи
+
+#include <iostream>  
+#include <vector>    
+#include <numeric>   
+#include <functional> 
+
+using namespace std;
+
+// генерирует n чисел Фибоначчи
+vector<int> fibonacci(int n) {
+    if (n <= 0) return {};
+
+    vector<int> fib(n);
+    fib[0] = 0;
+
+    if (n > 1) fib[1] = 1;
+
+    for (int i = 2; i < fib.size(); ++i) {  // вычисляем числа (начиная с 2-го)
+        // i-й элемент = сумме двух предыдущих
+        fib[i] = inner_product(fib.begin() + i - 2, fib.begin() + i, vector<int>{1, 1}.begin(), 0, plus<int>(), multiplies<int>());
+        // fib[i] = fib[i-2] + fib[i-1]
+        // (в диапазоне fib[i-2]..fib[i-1] * {1,1}, сложение через plus, умножение через multiplies)
+    }
+
+    return fib;
+}
+
+int main() {
+    setlocale(LC_ALL, "RU");
+
+    int n;
+    cout << "Количество чисел Фибоначчи: ";
+    cin >> n;
+
+    vector<int> fib_pos = fibonacci(n); // вычисляем последовательность
+
+    for (int num : fib_pos) {
+        cout << num << " ";
+    }
+    cout << endl;
+
+    return 0;
+}
