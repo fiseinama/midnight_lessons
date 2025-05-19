@@ -1,0 +1,70 @@
+// Дана последовательность целых чисел. Вывести данные в обратном порядке. 
+// Заменить числа, попадающие в интервал [𝑎, 𝑏] числом 𝑋. Отсортировать элементы. 
+// Вставить новый элемент в отсортированную последовательность 
+// (Оптимальным способом. Вставить в конец и потом опять отсортировать - не оптимально). Удалить все повторяющиеся элементы.
+
+#include<iostream>
+#include<vector>
+#include<algorithm>
+using namespace std;
+
+int main() {
+	setlocale(LC_ALL, "RU");
+	int n, m;
+	cout << "Последовательность чисел от n: ";
+	cin >> n;
+	cout << "До m: ";
+	cin >> m;
+
+	vector<int> a;
+	for (int i = n; i <= m; i++)
+		a.push_back(i);
+	reverse(a.begin(), a.end());
+	for (int num : a)
+		cout << num;
+	cout << endl;
+
+	int A, B, X;
+	cout << "A, B, X: ";
+	cin >> A >> B >> X;
+
+	auto is_in_range = [A, B](int num) {
+		return (num >= A && num <= B) || (num <= A && num >= B);
+		};
+
+	// Заменяем числа в векторе
+	replace_if(a.begin(), a.end(), is_in_range, X);
+
+
+	for (int num : a) {
+		cout << num;
+	}
+	cout << endl;
+
+	return 0;
+
+
+	cout << "Отсортированная последовательность: " << endl;
+	sort(a.begin(), a.end());
+
+	for (vector<int>::iterator iter = a.begin(); iter != a.end(); iter++)
+		cout << *iter;
+	cout << endl;
+
+	int N;
+	cout << "Новый элемент: ";
+	cin >> N;
+	auto el = lower_bound(a.begin(), a.end(), N); //возвращает итератор на первый элемент, который не меньше N
+	a.insert(el, N);
+
+	for (vector<int>::iterator iter = a.begin(); iter != a.end(); iter++)
+		cout << *iter;
+	cout << endl;
+
+	cout << "Без повторений: " << endl;
+	vector<int>::iterator iter1 = unique(a.begin(), a.end());
+	a.erase(iter1, a.end());
+	for (vector<int>::iterator iter = a.begin(); iter != a.end(); iter++)
+		cout << *iter;
+	cout << endl;
+}
