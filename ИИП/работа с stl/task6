@@ -1,0 +1,60 @@
+// Дан текст, состоящий из предложений, разделенных знаками препинания из набора «. ? !».
+// Предложения в свою очередь состоят из слов, отделенных друг от друга пробелами.
+// Найти слова(без учета регистра), которые встречаются  в восклицательных или в повествовательных предложениях, но не встречаются в вопросительных.
+#include <iostream>
+#include <set>
+#include <string>
+#include <algorithm>
+#include <sstream>
+
+using namespace std;
+
+int main() {
+    setlocale(LC_ALL, "RU");
+    string text;
+    cout << "Введите текст: ";
+    getline(cin, text);
+
+    set<string> vopr;   
+    set<string> vosk_pov;  
+
+    string razd = "!?.";
+
+    size_t pos = 0; //текущая позиция в строке
+    size_t k = 0; //отвечает за индекс знака препинания
+   
+    while (pos < text.size()) {
+        k = text.find_first_of(razd, pos); //находим первый разделитель
+        if (k == string::npos) break;
+
+        string temp = text.substr(pos, k - pos); //извлекаем подстроку
+        char endChar = text[k]; //запоминаем знак препинания в конце
+
+        stringstream ss(temp);
+        string word;
+
+        while (ss >> word) {
+            transform(word.begin(), word.end(), word.begin(), ::tolower);
+
+            if (endChar == '?') {
+                vopr.insert(word);
+            }
+            else if (endChar == '!' || endChar == '.') {
+                vosk_pov.insert(word);
+            }
+        }
+
+        //передвигаемся к следующему предложению
+        pos = k + 1;
+    }
+
+    cout << "Слова, встречающиеся в восклицательных или повествовательных, но не в вопросительных предложениях: " << endl;
+    for (const string& word : vosk_pov) {
+        if (vopr.find(word) == vopr.end()) {
+            cout << word << " ";
+        }
+    }
+    cout << endl;
+
+    return 0;
+}
