@@ -1,0 +1,63 @@
+//Дана последовательность целых чисел. Найти все такие цифры, которые встречаются только в трехзначных числах. 
+// Работать только с цифрами, которые встречаются в данной последовательности, а не со всеми цифрами от 0 до 9.
+
+#include <iostream>
+#include <set>
+#include <algorithm>
+
+using namespace std;
+
+int main1() {
+    setlocale(LC_ALL, "RU");
+    int n;
+    cin >> n;
+    set<int> a;
+
+    srand(time(NULL));
+    for (int i = 0; i < n; i++)
+        a.insert(rand() % 1000); 
+    //set<int>a = { 4, 67, 8888, 342, 987 }; 
+
+    for (set<int>::iterator it = a.begin(); it != a.end(); it++)
+        cout << *it << " ";
+    cout << endl;
+
+    set<int> three_digit;  //цифры только из трехзначных чисел
+    set<int> not_three_digit;  //цифры из других чисел
+
+    for (set<int>::iterator it = a.begin(); it != a.end(); it++) {
+        int number = *it;
+
+        if (number >= 100 && number <= 999) { 
+            int last = number % 10;
+            int second = (number / 10) % 10;
+            int first = number / 100;
+
+            cout << first << " " << second << " " << last << " "; 
+
+            three_digit.insert(first);
+            three_digit.insert(second);
+            three_digit.insert(last);
+        }
+        else { 
+            while (number > 0) {
+                not_three_digit.insert(number % 10);
+                number /= 10;
+            }
+        }
+    }
+    cout << endl;
+
+    set<int> result;
+    set_difference(three_digit.begin(), three_digit.end(),
+        not_three_digit.begin(), not_three_digit.end(),
+        inserter(result, result.begin()));
+
+    cout << "Цифры, встречающиеся только в трехзначных числах: ";
+    for (int digit : result) {
+        cout << digit << " ";
+    }
+    cout << endl;
+
+    return 0;
+}
