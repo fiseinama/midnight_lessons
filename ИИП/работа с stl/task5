@@ -1,0 +1,52 @@
+//Во входном файле задан набор слов и целых чисел, разделенных пробелами. Найти 𝑘 слов, встречающихся чаще остальных.
+
+#include<iostream>
+#include<algorithm>
+#include<string>
+#include<map>
+using namespace std;
+
+int main11() {
+	setlocale(LC_ALL, "RU");
+	
+	map<string, int> words;
+	string ss;
+
+	cout << "Введите строку: ";
+	while (cin >> ss && ss != "-") {
+		bool isWord = true;
+
+		for (char c : ss) {
+			if (isdigit(c)) {
+				isWord = false; //если есть цифры, то это не слово
+				break;
+			}
+		}
+		if (isWord)
+			words[ss]++;
+
+	}
+
+	int k;
+	cout << "Введите k: ";
+	cin >> k;
+	cout << "k слов, встречающихся чаще:" << endl;
+
+	for (int i = 0; i < k; i++) {
+		auto maxElem = max_element(words.begin(), words.end(),
+			[](const auto& a, const auto& b) {
+				return a.second < b.second; 
+			});
+
+		if (maxElem == words.end()) break;
+
+		cout << maxElem->first << " - " << maxElem->second << " раз(а)\n";
+		words.erase(maxElem);
+	}
+
+	return 0;
+	
+}
+
+
+
