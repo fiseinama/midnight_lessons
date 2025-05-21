@@ -1,0 +1,167 @@
+//Сначала по зарплате, потом по году рождения с помощью сортировки слиянием.
+
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <sstream>
+#include <vector>
+#include <iomanip>
+#include <algorithm>
+
+using namespace std;
+
+struct Data {
+    int day = 0;
+    int month = 0;
+    int year = 0;
+};
+
+struct Sotrudnik {
+    string surname;
+    string dolzhnost;
+    Data dataR;
+    int opyt = 0;
+    double zarplata = 0.0;
+};
+
+// Проверка корректности даты
+bool proverkaDat(const Data& data) {
+    if (data.year < 1900 || data.year > 2025 || data.month < 1 || data.month > 12 || data.day < 1) {
+        return false;
+    }
+
+    int dayinMonth[] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+    if (data.year % 4 == 0 && (data.year % 100 != 0 || data.year % 400 == 0)) {
+        dayinMonth[2] = 29;
+    }
+
+    return data.day <= dayinMonth[data.month];
+}
+
+// Разбор даты из строки формата "дд.мм.гггг"
+Data razborDati(const string& strokaDat) {
+    Data data = { 0, 0, 0 };
+    char tochka1, tochka2;
+    stringstream ss(strokaDat);
+    if (!(ss >> data.day >> tochka1 >> data.month >> tochka2 >> data.year) || tochka1 != '.' || tochka2 != '.') {
+        cout << "Неверный формат даты: " << strokaDat << endl;
+        return data;
+    }
+
+    if (!proverkaDat(data)) {
+        cout << "Некорректная дата: " << strokaDat << endl;
+        return data;
+    }
+    return data;
+}
+
+// Чтение сотрудников из файла
+vector<Sotrudnik> chitaySotrudnikov(const string& fio) {
+    ifstream faylVhod(fio);
+    vector<Sotrudnik> sotrudniki;
+    string stroka;
+
+    while (getline(faylVhod, stroka)) {
+        stringstream ss(stroka);
+        Sotrudnik sotr;
+        string strokaDat;
+
+        getline(ss, sotr.surname, ',');  // Читаем фамилию до запятой
+        ss.ignore(); // Пропускаем пробел после запятой
+
+        getline(ss, sotr.dolzhnost, ','); // Читаем должность до запятой
+        ss.ignore();
+
+        ss >> strokaDat >> sotr.opyt;
+        ss.ignore(); // Пропускаем пробел перед зарплатой
+        ss >> sotr.zarplata;
+
+        sotr.dataR = razborDati(strokaDat);
+
+        sotrudniki.push_back(sotr);
+    }
+
+    return sotrudniki;
+}
+
+// Запись сотрудников в файл
+void zapisyvatSotrudnikov(const string& fio, const vector<Sotrudnik>& sotrudniki) {
+    ofstream faylVydok(fio);
+    if (!faylVydok) {
+        cout << "Ошибка открытия файла!" << endl;
+        return;
+    }
+
+    // Заголовок таблицы
+    faylVydok << setw(20) << left << "Фамилия"
+        << setw(30) << "Должность"
+        << setw(15) << "Дата рождения"
+        << setw(8) << right << "Опыт"
+        << setw(12) << right << "Зарплата" << endl;
+    faylVydok << string(90, '-') << endl;  // Разделитель
+
+    for (const auto& sotr : sotrudniki) {
+        faylVydok << setw(20) << left << sotr.surname
+            << setw(30) << sotr.dolzhnost
+            << setw(2) << right << sotr.dataR.day << "." << setw(2) << sotr.dataR.month << "." << sotr.dataR.year << "  "
+            << setw(10) << right << sotr.opyt << "  "
+            << setw(8) << sotr.zarplata << " руб." << endl;
+    }
+}
+
+// Слияние двух отсортированных частей
+void slitye(vector<Sotrudnik>& sotrudniki, int levoe, int seredina, int pravo) {
+    int n1 = seredina - levoe + 1;
+    int n2 = pravo - seredina;
+
+    vector<Sotrudnik> levayaChast(n1), pravayaChast(n2);
+
+    for (int i = 0; i < n1; ++i) {
+        levayaChast[i] = sotrudniki[levoe + i];
+    }
+    for (int j = 0; j < n2; ++j) {
+        pravayaChast[j] = sotrudniki[seredina + 1 + j];
+    }
+
+    int i = 0, j = 0, k = levoe;
+    while (i < n1 && j < n2) {
+        // Сортировка по убыванию для зарплаты и по возрастанию для года рождения
+        if (levayaChast[i].zarplata > pravayaChast[j].zarplata ||
+            (levayaChast[i].zarplata == pravayaChast[j].zarplata && levayaChast[i].dataR.year < pravayaChast[j].dataR.year)) {
+            sotrudniki[k++] = levayaChast[i++];
+        }
+        else {
+            sotrudniki[k++] = pravayaChast[j++];
+        }
+    }
+
+    while (i < n1) {
+        sotrudniki[k++] = levayaChast[i++];
+    }
+    while (j < n2) {
+        sotrudniki[k++] = pravayaChast[j++];
+    }
+}
+
+// Реализация сортировки слиянием
+void sortirovatSliyanie(vector<Sotrudnik>& sotrudniki, int levoe, int pravo) {
+    if (levoe >= pravo) return;
+
+    int seredina = levoe + (pravo - levoe) / 2;
+
+    sortirovatSliyanie(sotrudniki, levoe, seredina);
+    sortirovatSliyanie(sotrudniki, seredina + 1, pravo);
+    slitye(sotrudniki, levoe, seredina, pravo);
+}
+
+int main() {
+    setlocale(LC_ALL, "RU");
+
+    vector<Sotrudnik> sotrudniki = chitaySotrudnikov("input1.txt");
+
+    sortirovatSliyanie(sotrudniki, 0, sotrudniki.size() - 1);
+
+    zapisyvatSotrudnikov("output1.txt", sotrudniki);
+
+    return 0;
+}
