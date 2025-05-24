@@ -1,0 +1,167 @@
+// Создать очередь из целых чисел. Выполнить циклический сдвиг очереди так, чтобы на первом месте было первое простое число. 
+// Например, было  4 8 6 9 1 2 3 4 5 7. Стало 2 3 4 5 7 4 8 6 9
+
+#include <iostream>
+using namespace std;
+
+// узел связного списка
+struct Node {
+    int data;     // данные, хранимые в узле
+    Node* next;   // указатель на следующий узел в списке
+
+    // конструктор узла
+    Node(int val) : data(val), next(nullptr) {}
+};
+
+// класс очереди на связном списке
+class LinkedListQueue {
+private:
+    Node* front;  // указатель на начало очереди (первый элемент)
+    Node* rear;   // указатель на конец очереди (последний элемент)
+    int size;     // текущий размер очереди (количество элементов)
+
+public:
+    // инициализируем пустую очередь
+    LinkedListQueue() : front(nullptr), rear(nullptr), size(0) {}
+
+    // деструктор: освобождаем память, удаляя все элементы очереди
+    ~LinkedListQueue() {
+        while (front != nullptr) {
+            Node* temp = front;
+            front = front->next;
+            delete temp;
+        }
+        rear = nullptr;
+    }
+
+    // добавление элемента в конец очереди
+    void enqueue(int val) {
+        Node* newNode = new Node(val);  // создаем новый узел
+
+        // если очередь пуста, новый узел становится и началом, и концом
+        if (rear == nullptr) {
+            front = rear = newNode;
+        }
+        else {
+            rear->next = newNode;  // привязываем новый узел к концу очереди
+            rear = newNode;        // обновляем указатель на конец очереди
+        }
+        size++;  // увеличиваем счетчик размера
+    }
+
+    // удаление элемента из начала очереди
+    int dequeue() {
+        Node* temp = front;      // сохраняем указатель на удаляемый узел
+        int val = temp->data;   // сохраняем данные из удаляемого узла
+
+        front = front->next;     // перемещаем указатель начала на следующий узел
+
+        // если после удаления очередь стала пустой, обнуляем и rear
+        if (front == nullptr) {
+            rear = nullptr;
+        }
+
+        delete temp;  // освобождаем память удаляемого узла
+        size--;       // уменьшаем счетчик размера
+        return val;   // возвращаем значение удаленного элемента
+    }
+
+    // просмотр первого элемента
+    int peek() {
+        return front->data;  // возвращаем данные первого элемента
+    }
+
+    // проверка на пустоту
+    bool isEmpty() {
+        return front == nullptr;  // очередь пуста, если front равен nullptr
+    }
+
+    // получение размера очереди
+    int getSize() {
+        return size;
+    }
+
+    // вывод содержимого очереди в консоль
+    void print() {
+        Node* current = front;  // начинаем с начала очереди
+
+        // проходим по всем узлам и выводим их данные
+        while (current != nullptr) {
+            cout << current->data << " ";
+            current = current->next;
+        }
+        cout << endl;
+    }
+};
+
+// функция проверки числа на простоту
+bool isPrime(int n) {
+    if (n <= 1) return false;   // числа <= 1 не являются простыми
+    if (n == 2) return true;    // 2 - единственное четное простое число
+    if (n % 2 == 0) return false;  // остальные четные числа не простые
+
+    // проверяем делители от 3 до квадратного корня из n
+    for (int i = 3; i * i <= n; i += 2) {
+        if (n % i == 0) return false;  // найден делитель - число не простое
+    }
+    return true;  // делителей не найдено - число простое
+}
+
+// функция циклического сдвига очереди до первого простого числа
+void shiftToFirstPrime(LinkedListQueue& q) {
+    int queueSize = q.getSize();  // запоминаем исходный размер очереди
+    int shiftCount = 0;           // счетчик выполненных сдвигов
+    bool foundPrime = false;      // флаг, найден ли простой элемент
+
+    // ищем первое простое число, делая циклические сдвиги
+    while (shiftCount < queueSize && !foundPrime) {
+        int current = q.peek();  // смотрим первый элемент
+
+        if (isPrime(current)) {
+            foundPrime = true;  // нашли простое число
+            break;
+        }
+
+        // если текущий элемент не простой, перемещаем его в конец
+        q.enqueue(q.dequeue());
+        shiftCount++;
+    }
+
+    // если простых чисел нет, возвращаем очередь в исходное состояние
+    if (!foundPrime) {
+        for (int i = 0; i < queueSize - shiftCount; i++) {
+            q.enqueue(q.dequeue());
+        }
+    }
+}
+
+int main1() {
+    setlocale(LC_ALL, "RU");
+
+    LinkedListQueue q;  // создаем очередь
+    int n, num;
+
+    cout << "Введите количество элементов в очереди: ";
+    cin >> n;
+
+    cout << "Введите " << n << " целых чисел:" << endl;
+    for (int i = 0; i < n; i++) {
+        cin >> num;
+        q.enqueue(num);
+    }
+
+    cout << "\nИсходная очередь: ";
+    q.print();
+
+    // выполняем сдвиг только если очередь не пуста
+    if (!q.isEmpty()) {
+        shiftToFirstPrime(q);
+        cout << "Очередь после сдвига: ";
+        q.print();
+    }
+    else {
+        cout << "Очередь пуста, сдвиг не выполнен." << endl;
+    }
+
+    return 0;
+}
