@@ -1,0 +1,117 @@
+// Создать двусвязный список, содержащий целые числа. Удалить первый и последний нечетный элемент. Например, было 8 2 1 6 8 8 1 2 2 8 2 1. Стало 8 2 6 8 8 1 2 2  8 2. 
+
+#include <iostream>
+using namespace std;
+
+struct list {
+    int inf;
+    list* next;
+    list* prev;
+};
+
+// функция добавления элемента в конец списка
+void push(list*& h, list*& t, int x) {
+    list* r = new list;
+    r->inf = x;
+    r->next = NULL;
+    if (!h && !t) {
+        r->prev = NULL;
+        h = t = r;
+    }
+    else {
+        t->next = r;
+        r->prev = t;
+    }
+    t = r;
+}
+
+// функция вывода списка
+void print(list* h) {
+    list* p = h;
+    while (p) {
+        cout << p->inf << " ";
+        p = p->next;
+    }
+    cout << endl;
+}
+
+// функция удаления узла из списка
+void del_node(list*& h, list*& t, list* r) {
+    if (r == h && r == t) { // если элемент один в списке, обнуляем голову и хвост
+        h = t = NULL;
+    }
+    else if (r == h) { // если удаляемый элемент голова
+        h = h->next;    // перемещаем голову вперед
+        if (h) h->prev = NULL; // если новая голова существует, обнуляем ее предыдущий элемент
+    }
+    else if (r == t) {
+        t = t->prev;
+        if (t) t->next = NULL; // если новый хвост существует, обнуляем его следующий элемент
+    }
+    else { // если элемент в середине
+        r->next->prev = r->prev; // у следующего элемента меняем указатель на предыдущий и наоборот
+        r->prev->next = r->next;
+    }
+    delete r;
+}
+
+// функция удаления первого и последнего нечётного элемента
+void remove(list*& h, list*& t) {
+    list* first_odd = NULL;  // указатели
+    list* last_odd = NULL;   
+    list* p = h;            
+
+    while (p) { // поиск первого нечетного
+        if (p->inf % 2 != 0) {  
+            first_odd = p;       // запоминаем его
+            break;               // выходим из цикла
+        }
+        p = p->next;            // переходим к следующему элементу
+    }
+
+    p = t;                      // начинаем с хвоста списка
+
+    while (p) {
+        if (p->inf % 2 != 0) { 
+            last_odd = p;       
+            break;               
+        }
+        p = p->prev;           
+    }
+
+    // удаление элементов
+    if (first_odd && last_odd) {  // если оба элемента найдены
+        if (first_odd == last_odd) {  // если это один и тот же элемент
+            del_node(h, t, first_odd);  // удаляем его один раз
+        }
+        else {                    
+            del_node(h, t, first_odd);  // удаляем первый нечетный
+            del_node(h, t, last_odd);   // удаляем последний нечетный
+        }
+    }
+}
+
+int main() {
+    setlocale(LC_ALL, "RU");
+    list* head = NULL;
+    list* tail = NULL;
+
+    int n;
+    cout << "Введите количество элементов: ";
+    cin >> n;
+
+    cout << "Введите " << n << " целых чисел:\n";
+    for (int i = 0; i < n; ++i) {
+        int x;
+        cin >> x;
+        push(head, tail, x);
+    }
+
+    remove(head, tail);
+
+    cout << "Результат: ";
+    print(head);
+
+    return 0;
+}
+
