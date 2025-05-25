@@ -1,0 +1,129 @@
+// Создать двусвязный список, содержащий целые числа. Выполнить сортировку пузырьком, меняя указатели, а не значения.
+
+#include <iostream>
+using namespace std;
+
+struct list {
+    int inf;
+    list* next;
+    list* prev;
+};
+
+// добавление элемента в конец списка
+void push(list*& h, list*& t, int x) {
+    list* r = new list;
+    r->inf = x;
+    r->next = NULL;
+    if (!h && !t) {
+        r->prev = NULL;
+        h = t = r;
+    }
+    else {
+        t->next = r;
+        r->prev = t;
+        t = r;
+    }
+}
+
+// вывод списка
+void print(list* h) {
+    list* p = h;
+    while (p) {
+        cout << p->inf << " ";
+        p = p->next;
+    }
+    cout << endl;
+}
+
+// функция для обмена соседними узлами
+void swap_nodes(list*& h, list*& t, list* a, list* b) {
+    if (a == b) return;  // если узлы одинаковые, ничего не делаем
+
+    // если a - это голова списка, обновляем голову
+    if (a == h) {
+        h = b;
+    }
+    else if (b == h) {
+        h = a;
+    }
+
+    // если b - это хвост списка, обновляем хвост
+    if (b == t) {
+        t = a;
+    }
+    else if (a == t) {
+        t = b;
+    }
+
+    // обмен указателями next
+    list* temp = a->next; // временно сохраняем следующий узел после a
+    a->next = b->next; // теперь после a идет то, что было после b
+    b->next = temp; // теперь после b идет то, что было после a
+
+    if (a->next) {
+        a->next->prev = a; // у узла после a исправляем prev на a
+    }
+
+    if (b->next) {
+        b->next->prev = b; // у узла после b исправляем prev на b
+    }
+
+    // обмен указателями prev
+    temp = a->prev;
+    a->prev = b->prev;
+    b->prev = temp;
+
+    if (a->prev) {
+        a->prev->next = a;
+    }
+
+    if (b->prev) {
+        b->prev->next = b;
+    }
+}
+
+// пузырьковая сортировка с изменением указателей
+void bubbleSort(list*& h, list*& t) {
+    if (!h || !h->next) return;  // если список пуст или состоит из одного элемента, сортировка не нужна
+
+    bool swapped;
+    do {
+        swapped = false; // в начале каждого прохода по списку сбрасываем флаг
+        list* p = h;
+
+        while (p && p->next) {
+            if (p->inf > p->next->inf) { // если текущий больше следующего
+                swap_nodes(h, t, p, p->next);  // меняем соседние узлы местами
+                swapped = true;
+            }
+            p = p->next;  // переходим к следующему узлу
+        }
+    } while (swapped);  // повторяем 
+}
+
+int main() {
+    setlocale(LC_ALL, "RU");
+    list* head = NULL;
+    list* tail = NULL;
+
+    int n;
+    cout << "Введите количество элементов: ";
+    cin >> n;
+
+    cout << "Введите " << n << " целых чисел:\n";
+    for (int i = 0; i < n; ++i) {
+        int x;
+        cin >> x;
+        push(head, tail, x);
+    }
+
+    cout << "До сортировки: ";
+    print(head);
+
+    bubbleSort(head, tail);
+
+    cout << "Результат: ";
+    print(head);
+
+    return 0;
+}
