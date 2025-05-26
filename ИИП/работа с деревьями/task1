@@ -1,0 +1,160 @@
+// Дан список целых чисел. Построить дерево бинарного поиска. Найти длину пути от узла А до узла В. 
+// Если такого пути нет, вывести сообщение об этом.
+
+#include <iostream>
+using namespace std;
+
+// структура узла дерева
+struct tree {
+    int inf;         // значение узла
+    tree* right;     // указатель на правого потомка
+    tree* left;      // указатель на левого потомка
+    tree* parent;    // указатель на родителя
+};
+
+// создание нового узла дерева
+tree* node(int x) {
+    tree* n = new tree;
+    n->inf = x;
+    n->left = n->right = NULL;
+    n->parent = NULL;
+    return n;
+}
+
+// вставка значения в дерево
+void insert(tree*& tr, int x) {
+    tree* n = node(x);
+    if (!tr)
+        tr = n;  // если дерево пустое, создаем корень
+    else {
+        tree* y = tr;
+        while (y) {
+            if (n->inf > y->inf) {  // если значение больше текущего узла
+                if (y->right)
+                    y = y->right;   // идем вправо
+                else {
+                    n->parent = y;   // устанавливаем родителя
+                    y->right = n;    // добавляем новый узел
+                    break;
+                }
+            }
+            else if (n->inf < y->inf) {  // если значение меньше текущего узла
+                if (y->left)
+                    y = y->left;    // идем влево
+                else {
+                    n->parent = y;   // устанавливаем родителя
+                    y->left = n;     // добавляем новый узел
+                    break;
+                }
+            }
+            else break;  // если значение уже существует, ничего не делаем
+        }
+    }
+}
+
+// симметричный обход дерева (сортировка по возрастанию)
+void inorder(tree* tr) {
+    if (tr) {
+        inorder(tr->left);      // обходим левое поддерево
+        cout << tr->inf << " "; // выводим значение узла
+        inorder(tr->right);     // обходим правое поддерево
+    }
+}
+
+// поиск узла по значению
+tree* find(tree* tr, int x) {
+    if (!tr || x == tr->inf)
+        return tr;  // если нашли узел или дерево пустое
+    if (x < tr->inf)
+        return find(tr->left, x);  // ищем в левом поддереве
+    else
+        return find(tr->right, x); // ищем в правом поддереве
+}
+
+// поиск наименьшего общего предка (LCA)
+tree* findLCA(tree* root, int a, int b) {
+    if (!root) return nullptr;
+
+    tree* nodeA = find(root, a);  // находим узел A
+    tree* nodeB = find(root, b);  // находим узел B
+
+    if (!nodeA || !nodeB) return nullptr;  // если один из узлов не найден
+
+    // ищем общего предка, поднимаясь от nodeA к корню
+    tree* temp = nodeA;
+    while (temp) {
+        // проверяем, является ли текущий узел предком nodeB
+        tree* t = nodeB;
+        while (t && t != temp) {
+            t = t->parent;
+        }
+        if (t == temp) return temp;  // нашли общего предка
+        temp = temp->parent;
+    }
+
+    return nullptr;
+}
+
+// вычисление расстояния от одного узла до другого
+int distanceFromNode(tree* from, tree* to) {
+    if (!from || !to) return -1;
+    int distance = 0;
+    while (from && from != to) {
+        if (to->inf < from->inf)
+            from = from->left;   // идем влево
+        else
+            from = from->right;  // идем вправо
+        distance++;
+    }
+    return from ? distance : -1;  // возвращаем расстояние или -1, если не найдено
+}
+
+// вычисление расстояния между двумя узлами
+int distanceBetweenNodes(tree* root, int a, int b) {
+    if (!root) return -1;
+    if (a == b) return 0;  // расстояние до самого себя равно 0
+
+    tree* nodeA = find(root, a);  // находим узел A
+    tree* nodeB = find(root, b);  // находим узел B
+
+    if (!nodeA || !nodeB) return -1;  // если один из узлов не существует
+
+    tree* lca = findLCA(root, a, b);  // находим наименьшего общего предка
+    if (!lca) return -1;
+
+    int distA = distanceFromNode(lca, nodeA);  // расстояние от LCA до A
+    int distB = distanceFromNode(lca, nodeB);  // расстояние от LCA до B
+
+    return distA + distB;  // общее расстояние между узлами
+}
+
+int main() {
+    setlocale(LC_ALL, "RU");
+    int n, x;
+
+    // запрашиваем количество элементов
+    cout << "n = ";
+    cin >> n;
+
+    tree* tr = NULL;
+
+    // ввод и построение дерева
+    for (int i = 0; i < n; i++) {
+        cin >> x;
+        insert(tr, x);
+    }
+
+    int a, b;
+    // запрашиваем узлы для вычисления расстояния
+    cout << "введите два значения узлов для расчета расстояния между ними: ";
+    cin >> a >> b;
+
+    // вычисляем расстояние
+    int dist = distanceBetweenNodes(tr, a, b);
+    if (dist == -1)
+        cout << "узлы не существуют или нет пути между ними\n";
+    else
+        cout << "расстояние между узлами " << a << " и " << b << " составляет " << dist << endl;
+
+    return 0;
+}
