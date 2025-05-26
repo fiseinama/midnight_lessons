@@ -1,0 +1,161 @@
+// Дан список целых чисел. Построить дерево бинарного поиска. Найти средний по значению лист и удалить его "деда"
+
+#include <iostream>
+#include <vector>
+#include <algorithm>
+using namespace std;
+
+struct tree {
+    int inf;
+    tree* left;
+    tree* right;
+    tree* parent;
+};
+
+// создает узел
+tree* node(int x) {
+    tree* n = new tree;
+    n->inf = x;
+    n->left = n->right = NULL;
+    n->parent = NULL;
+    return n;
+}
+
+// вставка узла в дерево
+void insert(tree*& tr, int x) {
+    tree* n = node(x);
+    if (!tr) {
+        tr = n;
+    }
+    else {
+        tree* y = tr;
+        while (y) {
+            if (n->inf > y->inf) {
+                if (y->right)
+                    y = y->right;
+                else {
+                    n->parent = y;
+                    y->right = n;
+                    break;
+                }
+            }
+            else if (n->inf < y->inf) {
+                if (y->left)
+                    y = y->left;
+                else {
+                    n->parent = y;
+                    y->left = n;
+                    break;
+                }
+            }
+            else break;
+        }
+    }
+}
+
+// собирает все листья
+void collectLeaves(tree* tr, vector<tree*>& leaves) {
+    if (!tr) return;
+    if (!tr->left && !tr->right)
+        leaves.push_back(tr);
+    collectLeaves(tr->left, leaves);
+    collectLeaves(tr->right, leaves);
+}
+
+// удаляет узел из дерева
+void Delete(tree*& tr, tree* v) {
+    if (!v) return;
+
+    // Если у узла два потомка
+    if (v->left && v->right) {
+        tree* succ = v->right;
+        while (succ->left) succ = succ->left;
+        v->inf = succ->inf;
+        Delete(tr, succ);
+        return;
+    }
+
+    // Один или ни одного потомка
+    tree* child = v->left ? v->left : v->right;
+    tree* parent = v->parent;
+
+    if (!parent) { // v — корень
+        tr = child;
+        if (child) child->parent = nullptr;
+    }
+    else {
+        if (parent->left == v)
+            parent->left = child;
+        else
+            parent->right = child;
+        if (child) child->parent = parent;
+    }
+
+    delete v;
+}
+
+
+
+// обратный обход
+void postorder(tree* tr) {
+    if (tr) {
+        postorder(tr->left);
+        postorder(tr->right);
+        cout << tr->inf << " ";
+    }
+}
+
+int main() {
+    setlocale(LC_ALL, "RU");
+    int n, x;
+    cout << "n = ";
+    cin >> n;
+    tree* tr = NULL;
+
+    // ввод и построение дерева
+    for (int i = 0; i < n; i++) {
+        cin >> x;
+        insert(tr, x);
+    }
+
+    // сбор всех листьев
+    vector<tree*> leaves;
+    collectLeaves(tr, leaves);
+
+    if (leaves.empty()) {
+        cout << "в дереве нет листьев\n";
+        return 0;
+    }
+
+    // сортировка по значению
+    sort(leaves.begin(), leaves.end(), [](tree* a, tree* b) {
+        return a->inf < b->inf;
+        });
+
+    // вывод всех листьев в отсортированном порядке
+    cout << "листья в отсортированном порядке: ";
+    for (auto leaf : leaves) {
+        cout << leaf->inf << " ";
+    }
+    cout << endl;
+
+    // средний по значению лист
+    tree* midLeaf = leaves[leaves.size() / 2];
+    cout << "средний по значению лист: " << midLeaf->inf << endl;
+
+    // поиск деда
+    if (midLeaf->parent && midLeaf->parent->parent) {
+        tree* grandparent = midLeaf->parent->parent;
+        cout << "удаляется дед с значением: " << grandparent->inf << endl;
+        Delete(tr, grandparent);
+    }
+    else {
+        cout << "у среднего листа нет деда\n";
+    }
+
+    cout << "дерево после удаления:\n";
+    postorder(tr);
+    cout << endl;
+
+    return 0;
+}
