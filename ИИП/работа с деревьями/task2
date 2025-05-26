@@ -1,0 +1,89 @@
+// Дан список целых чисел. Построить дерево бинарного поиска. Вывести все узлы, имеющие двух детей.
+
+#include <iostream>
+using namespace std;
+
+// узел дерева
+struct tree {
+    int val;      // значение узла
+    tree* right;  // правый потомок
+    tree* left;   // левый потомок
+    tree* parent; // родитель
+};
+
+// создание нового узла
+tree* create_node(int x) {
+    tree* n = new tree;
+    n->val = x;
+    n->left = n->right = n->parent = nullptr;
+    return n;
+}
+
+// вставка значения в дерево
+void insert(tree*& root, int x) {
+    tree* n = create_node(x);
+    if (!root) {
+        root = n;
+        return;
+    }
+
+    tree* current = root;
+    while (current) {
+        if (x > current->val) {
+            if (current->right) {
+                current = current->right;
+            }
+            else {
+                n->parent = current;
+                current->right = n;
+                break;
+            }
+        }
+        else if (x < current->val) {
+            if (current->left) {
+                current = current->left;
+            }
+            else {
+                n->parent = current;
+                current->left = n;
+                break;
+            }
+        }
+        else {
+            // если значение уже существует
+            delete n;
+            break;
+        }
+    }
+}
+
+// вывод узлов с двумя потомками
+void print_nodes_with_two_children(tree* node) {
+    if (!node) return;
+
+    if (node->left && node->right)
+        cout << node->val << " ";
+
+    print_nodes_with_two_children(node->left);
+    print_nodes_with_two_children(node->right);
+}
+
+int main() {
+    setlocale(LC_ALL, "RU");
+    tree* root = nullptr;
+    int n, x;
+
+    cout << "n = ";
+    cin >> n;
+
+    // ввод и построение дерева
+    for (int i = 0; i < n; i++) {
+        cin >> x;
+        insert(root, x);
+    }
+
+    cout << "узлы с двумя потомками: ";
+    print_nodes_with_two_children(root);
+
+    return 0;
+}
