@@ -1,0 +1,46 @@
+// Дан ориентированный граф. Вывести количество вершин, смежных с данной.
+
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+using namespace std;
+
+int main() {
+    setlocale(LC_ALL, "RU");
+    int N, M;
+    cout << "Введите количество вершин и ребер: ";
+    cin >> N >> M;
+
+    vector<vector<int>> Gr(N);
+
+    // ввод рёбер графа
+    for (int i = 0; i < M; ++i) {
+        int x, y;
+        cin >> x >> y;
+
+        // проверяем, что номера вершин в допустимом диапазоне (от 1 до N)
+        if (x < 1 || x > N || y < 1 || y > N)
+            continue;
+
+        Gr[x - 1].push_back(y - 1); // добавляем вершину у в список смежности для вершины х (от х к у)
+    }
+    for (int i = 0; i < N; ++i) {
+        sort(Gr[i].begin(), Gr[i].end());
+        Gr[i].erase(unique(Gr[i].begin(), Gr[i].end()), Gr[i].end()); // сдвигаем уникальные элементы в начало, удаляем лишние с конца
+    }
+
+    int v; 
+    cout << "Исследуемая вершина: ";
+    cin >> v;
+
+    if (v < 1 || v > N) {
+        cout << "Некорректная вершина." << endl;
+        return 1;
+    }
+
+    cout << "Количество вершин, смежных с вершиной " << v << ": ";
+    cout << Gr[v - 1].size() << endl;
+
+    return 0;
+}
