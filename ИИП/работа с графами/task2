@@ -1,0 +1,64 @@
+// Дан неориентированный граф. Удалить ребро, соединяющее вершины А и B.
+
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+using namespace std;
+
+void printGraph(const vector<vector<int>>& Gr) {
+    for (int i = 0; i < (int)Gr.size(); ++i) {
+        cout << "Вершина " << i + 1 << ": ";
+        for (int v : Gr[i]) cout << v + 1 << " "; // для каждой вершины i в цикле выводим все её смежные вершины
+        cout << "\n";
+    }
+}
+
+int main() {
+    setlocale(LC_ALL, "RU");
+    int N, M;
+    cout << "Введите количество вершин и ребер: ";
+    cin >> N >> M;
+
+    vector<vector<int>> Gr(N);
+
+    // ввод рёбер (неориентированный граф)
+    for (int i = 0; i < M; ++i) {
+        int x, y;
+        cin >> x >> y;
+
+        if (x < 1 || x > N || y < 1 || y > N)
+            continue;
+        // добавляем вершины в списки смежности друг друга
+        Gr[x - 1].push_back(y - 1);
+        Gr[y - 1].push_back(x - 1);
+    }
+    for (int i = 0; i < N; ++i) {
+        sort(Gr[i].begin(), Gr[i].end());
+        Gr[i].erase(unique(Gr[i].begin(), Gr[i].end()), Gr[i].end());
+    }
+
+    int A, B;
+    cout << "Введите ребра A и B: ";
+    cin >> A >> B;
+
+    if (A < 1 || A > N || B < 1 || B > N) {
+        cout << "Некорректные вершины" << endl;
+        return 1;
+    }
+
+    cout << "До удаления ребра:\n";
+    printGraph(Gr);
+
+    // удаляем ребро A-B (из обоих списков)
+    auto& adjA = Gr[A - 1]; // получаем ссылку на список соседей вершины A
+    adjA.erase(remove(adjA.begin(), adjA.end(), B - 1), adjA.end()); // удаляем из списка все вхождения вершины B
+
+    auto& adjB = Gr[B - 1];
+    adjB.erase(remove(adjB.begin(), adjB.end(), A - 1), adjB.end());
+
+    cout << "\nПосле удаления ребра:\n";
+    printGraph(Gr);
+
+    return 0;
+}
