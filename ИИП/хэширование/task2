@@ -1,0 +1,204 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <iomanip>
+
+using namespace std;
+
+struct Employee {
+    string surname;
+    string position;
+    int birth_day = 0;
+    int birth_month = 0;
+    int birth_year = 0;
+    int experience = 0;
+    int salary = 0;
+};
+
+class HashTable {
+private:
+    static const int M = 23; // Размер таблицы — простое число
+    Employee* table[M];
+    bool occupied[M];
+
+    // Основная хеш-функция (по месяцу рождения)
+    int hash1(int month) {
+        return month % M;
+    }
+
+    // Вспомогательная хеш-функция (по стажу)
+    int hash2(int experience) {
+        return 1 + (experience % (M - 1));
+    }
+
+public:
+    HashTable() {
+        for (int i = 0; i < M; ++i) {
+            table[i] = nullptr;
+            occupied[i] = false;
+        }
+    }
+
+    ~HashTable() {
+        for (int i = 0; i < M; ++i) {
+            delete table[i];
+        }
+    }
+
+    void insert(const Employee& emp) {
+        int h1 = hash1(emp.birth_month);
+        int h2 = hash2(emp.experience);
+        int i = 0;
+
+        while (occupied[(h1 + i * h2) % M] && i < M) {
+            i++;
+        }
+
+        int index = (h1 + i * h2) % M;
+        if (i < M) {
+            table[index] = new Employee(emp);
+            occupied[index] = true;
+        }
+        else {
+            cout << "Ошибка: таблица переполнена\n";
+        }
+    }
+
+    void display() {
+        cout << "----------------------------------------------------------------------------\n";
+        cout << "| Index | Surname    | Position           | Birth Date  | Exp | Salary   |\n";
+        cout << "----------------------------------------------------------------------------\n";
+        for (int i = 0; i < M; ++i) {
+            if (occupied[i]) {
+                const Employee& emp = *table[i];
+                cout << "| " << setw(5) << i << " | "
+                    << setw(10) << emp.surname << " | "
+                    << setw(17) << emp.position << " | "
+                    << setw(2) << emp.birth_day << "."
+                    << setw(2) << setfill('0') << emp.birth_month << "."
+                    << setw(4) << emp.birth_year << setfill(' ') << " | "
+                    << setw(3) << emp.experience << " | "
+                    << setw(8) << emp.salary << " |\n";
+            }
+        }
+        cout << "----------------------------------------------------------------------------\n";
+    }
+
+    void search(int month, int experience) {
+        int h1 = hash1(month);
+        int h2 = hash2(experience);
+        int i = 0;
+        bool found = false;
+
+        cout << "----------------------------------------------------------------------------\n";
+        cout << "| Surname    | Position           | Birth Date  | Exp | Salary   |\n";
+        cout << "----------------------------------------------------------------------------\n";
+
+        while (i < M) {
+            int index = (h1 + i * h2) % M;
+            if (occupied[index]) {
+                const Employee& emp = *table[index];
+                if (emp.birth_month == month && emp.experience == experience) {
+                    cout << "| " << setw(10) << emp.surname << " | "
+                        << setw(17) << emp.position << " | "
+                        << setw(2) << emp.birth_day << "."
+                        << setw(2) << setfill('0') << emp.birth_month << "."
+                        << setw(4) << emp.birth_year << setfill(' ') << " | "
+                        << setw(3) << emp.experience << " | "
+                        << setw(8) << emp.salary << " |\n";
+                    found = true;
+                    break;
+                }
+            }
+            else {
+                break; // Пустая ячейка, дальше искать нет смысла
+            }
+            i++;
+        }
+
+        if (!found) {
+            cout << "Сотрудник не найден\n";
+        }
+
+        cout << "----------------------------------------------------------------------------\n";
+    }
+
+    // Удаление можно убрать, так как для закрытого хеширования не рекомендовано
+};
+
+Employee inputEmployee() {
+    Employee emp;
+    cout << "Введите фамилию: ";
+    cin >> emp.surname;
+    cout << "Введите должность: ";
+    cin.ignore();
+    getline(cin, emp.position);
+    cout << "Введите день рождения: ";
+    cin >> emp.birth_day;
+    cout << "Введите месяц рождения: ";
+    cin >> emp.birth_month;
+    cout << "Введите год рождения: ";
+    cin >> emp.birth_year;
+    cout << "Введите стаж работы: ";
+    cin >> emp.experience;
+    cout << "Введите зарплату: ";
+    cin >> emp.salary;
+    return emp;
+}
+
+int main() {
+    setlocale(LC_ALL, "RU");
+    HashTable hashTable;
+    ifstream file("data.txt");
+
+    if (!file) {
+        cerr << "Не удалось открыть файл\n";
+        return 1;
+    }
+
+    Employee emp;
+    while (file >> emp.surname >> emp.position >> emp.birth_day
+        >> emp.birth_month >> emp.birth_year >> emp.experience >> emp.salary) {
+        hashTable.insert(emp);
+    }
+    file.close();
+
+    hashTable.display();
+
+    while (true) {
+        cout << "\nМеню:\n";
+        cout << "1. Поиск сотрудника по месяцу рождения и стажу\n";
+        cout << "2. Добавление нового сотрудника\n";
+        cout << "3. Вывод хеш-таблицы\n";
+        cout << "4. Выход\n";
+        cout << "Выберите действие: ";
+
+        int choice;
+        cin >> choice;
+
+        if (choice == 1) {
+            int month, exp;
+            cout << "Введите месяц рождения: ";
+            cin >> month;
+            cout << "Введите стаж: ";
+            cin >> exp;
+            hashTable.search(month, exp);
+        }
+        else if (choice == 2) {
+            Employee newEmp = inputEmployee();
+            hashTable.insert(newEmp);
+            cout << "Сотрудник добавлен\n";
+        }
+        else if (choice == 3) {
+            hashTable.display();
+        }
+        else if (choice == 4) {
+            break;
+        }
+        else {
+            cout << "Неверный выбор\n";
+        }
+    }
+
+    return 0;
+}
