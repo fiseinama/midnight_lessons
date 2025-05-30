@@ -1,0 +1,234 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <iomanip>
+
+using namespace std;
+
+struct Employee {
+    string surname;
+    string position;
+    int birth_day = 0;
+    int birth_month = 0;
+    int birth_year = 0;
+    int experience = 0;
+    int salary = 0;
+};
+
+struct Node {
+    Employee data;
+    Node* prev;
+    Node* next;
+
+    Node(Employee emp) : data(emp), prev(nullptr), next(nullptr) {}
+};
+
+class DoublyLinkedList {
+private:
+    Node* head;
+    Node* tail;
+
+public:
+    DoublyLinkedList() : head(nullptr), tail(nullptr) {}
+
+    void push_back(Employee emp) {
+        Node* newNode = new Node(emp);
+        if (!head) {
+            head = tail = newNode;
+        }
+        else {
+            tail->next = newNode;
+            newNode->prev = tail;
+            tail = newNode;
+        }
+    }
+
+    void display(int month) {
+        Node* current = head;
+        while (current) {
+            Employee& emp = current->data;
+            if (emp.birth_month == month || month == -1) {
+                cout << "| " << setw(5) << emp.birth_month << " | "
+                    << setw(10) << emp.surname << " | "
+                    << setw(17) << emp.position << " | "
+                    << setw(2) << emp.birth_day << "."
+                    << setw(2) << setfill('0') << emp.birth_month << "."
+                    << setw(4) << emp.birth_year << setfill(' ') << " | "
+                    << setw(3) << emp.experience << " | "
+                    << setw(8) << emp.salary << " |\n";
+            }
+            current = current->next;
+        }
+    }
+
+    void find_by_month(int month) {
+        Node* current = head;
+        bool found = false;
+
+        cout << "----------------------------------------------------------------------------\n";
+        cout << "| Surname    | Position           | Birth Date  | Exp | Salary   |\n";
+        cout << "----------------------------------------------------------------------------\n";
+
+        while (current) {
+            Employee& emp = current->data;
+            if (emp.birth_month == month) {
+                found = true;
+                cout << "| " << setw(10) << emp.surname << " | "
+                    << setw(17) << emp.position << " | "
+                    << setw(2) << emp.birth_day << "."
+                    << setw(2) << setfill('0') << emp.birth_month << "."
+                    << setw(4) << emp.birth_year << setfill(' ') << " | "
+                    << setw(3) << emp.experience << " | "
+                    << setw(8) << emp.salary << " |\n";
+            }
+            current = current->next;
+        }
+
+        if (!found) cout << "Сотрудники не найдены\n";
+
+        cout << "----------------------------------------------------------------------------\n";
+    }
+
+    void remove_by_month(int month) {
+        Node* current = head;
+        while (current) {
+            if (current->data.birth_month == month) {
+                Node* toDelete = current;
+                if (current->prev)
+                    current->prev->next = current->next;
+                else
+                    head = current->next;
+
+                if (current->next)
+                    current->next->prev = current->prev;
+                else
+                    tail = current->prev;
+
+                current = current->next;
+                delete toDelete;
+            }
+            else {
+                current = current->next;
+            }
+        }
+    }
+};
+
+class HashTable {
+private:
+    static const int M = 12;
+    DoublyLinkedList table[M];
+
+    int hashFunction(int month) {
+        return (month - 1) % M;
+    }
+
+public:
+    void insert(Employee emp) {
+        int key = hashFunction(emp.birth_month);
+        table[key].push_back(emp);
+    }
+
+    void display() {
+        cout << "----------------------------------------------------------------------------\n";
+        cout << "| Month | Surname    | Position           | Birth Date  | Exp | Salary  |\n";
+        cout << "----------------------------------------------------------------------------\n";
+        for (int i = 0; i < M; i++) {
+            table[i].display(-1);
+        }
+        cout << "----------------------------------------------------------------------------\n";
+    }
+
+    void search(int month) {
+        int key = hashFunction(month);
+        table[key].find_by_month(month);
+    }
+
+    void remove(int month) {
+        int key = hashFunction(month);
+        table[key].remove_by_month(month);
+    }
+};
+
+Employee inputEmployee() {
+    Employee emp;
+    cout << "Введите фамилию: ";
+    cin >> emp.surname;
+    cout << "Введите должность: ";
+    cin.ignore();
+    getline(cin, emp.position);
+    cout << "Введите день рождения: ";
+    cin >> emp.birth_day;
+    cout << "Введите месяц рождения: ";
+    cin >> emp.birth_month;
+    cout << "Введите год рождения: ";
+    cin >> emp.birth_year;
+    cout << "Введите стаж работы: ";
+    cin >> emp.experience;
+    cout << "Введите зарплату: ";
+    cin >> emp.salary;
+    return emp;
+}
+
+int main() {
+    setlocale(LC_ALL, "RU");
+    HashTable hashTable;
+    ifstream file("data.txt");
+
+    if (!file) {
+        cerr << "Не удалось открыть файл\n";
+        return 1;
+    }
+
+    Employee emp;
+    while (file >> emp.surname >> emp.position >> emp.birth_day
+        >> emp.birth_month >> emp.birth_year >> emp.experience >> emp.salary) {
+        hashTable.insert(emp);
+    }
+    file.close();
+
+    hashTable.display();
+
+    while (true) {
+        cout << "\nМеню:\n";
+        cout << "1. Поиск сотрудников по месяцу рождения\n";
+        cout << "2. Удаление сотрудников по месяцу рождения\n";
+        cout << "3. Добавление нового сотрудника\n";
+        cout << "4. Вывод хеш-таблицы\n";
+        cout << "5. Выход\n";
+        cout << "Выберите действие: ";
+
+        int choice;
+        cin >> choice;
+
+        if (choice == 1) {
+            int month;
+            cout << "Введите месяц рождения (1-12): ";
+            cin >> month;
+            hashTable.search(month);
+        }
+        else if (choice == 2) {
+            int month;
+            cout << "Введите месяц рождения для удаления (1-12): ";
+            cin >> month;
+            hashTable.remove(month);
+            cout << "Сотрудники с месяцем рождения " << month << " удалены\n";
+        }
+        else if (choice == 3) {
+            Employee newEmp = inputEmployee();
+            hashTable.insert(newEmp);
+            cout << "Сотрудник добавлен\n";
+        }
+        else if (choice == 4) {
+            hashTable.display();
+        }
+        else if (choice == 5) {
+            break;
+        }
+        else {
+            cout << "Неверный выбор. Попробуйте снова\n";
+        }
+    }
+
+    return 0;
+}
